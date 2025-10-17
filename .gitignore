@@ -1,0 +1,46 @@
+# ipynb and pychache
+*.ipynb_checkpoints
+__pycache__
+
+# experimental Code
+*_exp_*
+
+# data
+Data/*.npy
+
+#ignore all subdirectories in data and all files in them
+Data/*/*
+Data/*/*/*
+
+Checkpoints/*.pth
+Checkpoints/*/*.pth
+CheckpointsDiff*/*.pth
+CheckpointsDiff*/*/*.pth
+CheckpointsPhysx/*.pth
+CheckpointsPhysx*/*/*.pth
+*.out
+*.html
+log/*
+/log
+*.log
+
+Results/*.npy
+Results/*/*.npy
+
+*.mp4
+
+Dataset/*/
+Dataset/*
+!Dataset/run_this.py
+
+*experimental*
+
+Latents/*
+!Latents/README.md
+
+Results/*
+*.pkl
+*.safetensors
+config.json
+*/*.md
+*.pth
