@@ -1,0 +1,1 @@
+from ._solvers import CHOLMOD, CG, GMRES, BiCGSTAB, SPLU, SPSOLVE, MultiGrid

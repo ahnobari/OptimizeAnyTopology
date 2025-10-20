@@ -1,0 +1,1 @@
+from ._linelas import auto_stiffness, triangle_element_stiffness, hexahedron_element_stiffness, tetrahedron_element_stiffness, quadrilateral_element_stiffness
