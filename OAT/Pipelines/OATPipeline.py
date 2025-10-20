@@ -338,7 +338,7 @@ class OATPipeline:
 
         phi = self.nfae.decoder(noise)
         prediction = self.nfae.renderer(phi, neural_field_inputs['gt_coord'], neural_field_inputs['gt_cell'])
-        # prediction = prediction.cpu().reshape(n_samples, batch_size, *prediction.shape[1:]).swapaxes(0, 1).squeeze(1)
+
         prediction = [
             [prediction[i + j * batch_size].cpu() for j in range(n_samples)] for i in range(batch_size)
         ]
