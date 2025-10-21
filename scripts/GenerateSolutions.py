@@ -81,7 +81,7 @@ def generate_samples(
                 clamp_latents=False,
                 remap_latents=False
             )
-        all_generated.extend(gen)
+        all_generated.extend(gen[0])
             
     return all_generated
 
@@ -92,7 +92,7 @@ def main():
         kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=True)]
     )
     
-    data = load_dataset("OpenTO/OpenTO", split=args.splits)
+    data = load_dataset("OpenTO/OpenTO", split=args.splits).select(range(40))
     dataset = OpenTO(data, full_sampling=True)
     
     collator = DiffusionCollator(

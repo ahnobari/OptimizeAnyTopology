@@ -36,7 +36,7 @@ class FiniteElement(FE):
                                         node_ids: Optional[np.ndarray] = None,
                                         positions: Optional[np.ndarray] = None,
                                         dofs: Optional[np.ndarray] = None,
-                                        rhs: Union[float,np.ndarray] = 0):
+                                        rhs: Union[float,np.ndarray] = 0.):
         
         if not node_ids is None:
             node_ids = np.array(node_ids)
