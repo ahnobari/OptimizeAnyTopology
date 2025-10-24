@@ -305,7 +305,38 @@ class MinimumCompliance(Problem):
                 return False
         else:
             return True
+    
+    def FEA(self, thresshold: bool = True):
+        if self.desvars is None:
+            raise ValueError("Design variables are not initialized. Call init_desvars() or set_desvars() first.")
+
+        if thresshold:
+            rho = (self.get_desvars()>0.5).astype(self.dtype) + self.void
+            
+        if not self.is_single_material:
+            rho = rho.reshape(self.n_material, -1).T
+            rho = (rho * self.E_mul[np.newaxis, :]).sum(axis=1)
+        else:
+            rho = rho * self.E_mul
         
+        if hasattr(self.FE.solver, 'maxiter'):
+            maxiter = self.FE.solver.maxiter + 0
+            self.FE.solver.maxiter = maxiter * 4
+            
+       
+        U,residual = self.FE.solve(rho)
+        compliance = self.FE.rhs.dot(U)
+
+        if residual > 1e-5:
+            print(f"Solver residual is above 1e-5 ({residual:.4e}). Consider higher iterations (rerun this function and more iteration from prior solve will be applied).")
+        
+        out = {
+            'compliance': compliance,
+            'Displacements': U
+        }
+        
+        return out
+    
     def logs(self):
         
         return {

@@ -173,6 +173,7 @@ class MultiGrid(Solver):
         self.coarse_solver = coarse_solver
         self.low_level_tol = low_level_tol
         self.low_level_maxiter = low_level_maxiter
+        self.factor = None
         
         if isinstance(self.w_level, int):
             self.w_level = [self.w_level]

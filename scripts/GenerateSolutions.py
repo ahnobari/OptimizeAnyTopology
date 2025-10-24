@@ -15,6 +15,8 @@ torch.set_float32_matmul_precision('high')
 
 args = argparse.ArgumentParser()
 args.add_argument("--splits", type=str, default="test+NITO_test", help="+ separated dataset splits to use, default 'test+NITO_test'")
+args.add_argument("--start_idx", type=int, default=0, help="start index of data to process. default 0")
+args.add_argument("--end_idx", type=int, default=None, help="end index of data to process. default None")
 args.add_argument("--batch_size", type=int, default=4, help="batch size. default 4")
 args.add_argument("--ae_model", type=str, default="OpenTO/NFAE", help="path to trained hf autoencoder model checkpoint. default 'OpenTO/NFAE'")
 args.add_argument("--ldm_model", type=str, default="OpenTO/LDM", help="path to trained hf latent diffusion model checkpoint. default 'OpenTO/LDM'")
@@ -92,7 +94,8 @@ def main():
         kwargs_handlers=[DistributedDataParallelKwargs(find_unused_parameters=True)]
     )
     
-    data = load_dataset("OpenTO/OpenTO", split=args.splits).select(range(40))
+    data = load_dataset("OpenTO/OpenTO", split=args.splits)
+    data = data.select(range(args.start_idx, args.end_idx) if args.end_idx is not None else range(args.start_idx, len(data)))
     dataset = OpenTO(data, full_sampling=True)
     
     collator = DiffusionCollator(
@@ -130,16 +133,22 @@ def main():
         verbose= accelerator.is_main_process
     )
     
+    temporary_file_name = args.output_path.replace('.pkl', f'_tmp_{accelerator.process_index}.pkl')
+    with open(temporary_file_name, 'wb') as f:
+        pickle.dump(generated_samples, f)
+    
     if accelerator.num_processes > 1:
-        if not accelerator.is_main_process:
-            temporary_file_name = args.output_path.replace('.pkl', f'_tmp_{accelerator.process_index}.pkl')
-            with open(temporary_file_name, 'wb') as f:
-                pickle.dump(generated_samples, f)
-                
-        accelerator.wait_for_everyone()
         if accelerator.is_main_process:
-            all_samples = generated_samples
-            for i in range(1, accelerator.num_processes):
+            while True:
+                all_present = True
+                for i in range(accelerator.num_processes):
+                    temporary_file_name = args.output_path.replace('.pkl', f'_tmp_{i}.pkl')
+                    if not os.path.exists(temporary_file_name):
+                        all_present = False
+                if all_present:
+                    break
+            all_samples = []
+            for i in range(accelerator.num_processes):
                 temporary_file_name = args.output_path.replace('.pkl', f'_tmp_{i}.pkl')
                 with open(temporary_file_name, 'rb') as f:
                     part_samples = pickle.load(f)
@@ -148,7 +157,6 @@ def main():
             with open(args.output_path, 'wb') as f:
                 pickle.dump(all_samples, f)
             print(f"Saved {len(all_samples)} x {args.n_samples} generated samples to {args.output_path}")
-    
     else:
         with open(args.output_path, 'wb') as f:
             pickle.dump(generated_samples, f)

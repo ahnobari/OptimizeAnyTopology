@@ -34,7 +34,15 @@ To load checkpoints using these pretrained weights you can use the `.from_pretra
 To train the autoencoder run `trainAE.py` in the scripts folder. To see options run help. This script is run using accelerate. In our work we train the model using 8 gpus with a per-gpu batchsize of 15 (120 effective batch size) with dynamic compilation at full precision. To run training on the full pretraining dataset run:
 
 ```
-accelerate launch --config-file ./accelerate_configs/AE.yml -m  scripts.trainAE --full_sampling --cosine_scheduler --batch_size 15 --num_epochs 30 --extra_decoder_layers --encoder_res 256 --checkpoint_dir checkpointsAE --final_checkpoint NFAE
+accelerate launch --config-file ./accelerate_configs/AE.yml -m  scripts.trainAE \
+           --full_sampling \
+           --cosine_scheduler \
+           --batch_size 15 \
+           --num_epochs 30 \
+           --extra_decoder_layers \
+           --encoder_res 256 \
+           --checkpoint_dir checkpointsAE \
+           --final_checkpoint NFAE
 ```
 
 This script will save a hf compatible checkpoint at the `--final_checkpoint` directory
@@ -46,7 +54,10 @@ Traininf the latent diffusion model (LDM) is done in two steps:
 To train the latent diffusion model you will first need to pre-compute the latent tensors using the auto-encoder. To do this we provice the `ComputeLatents.py` script. We run this script using accelerate as well to distribute computation of latents across multiple GPUs. To run this script you can run:
 
 ```
-accelerate launch --config-file ./accelerate_configs/AE.yml -m scripts.ComputeLatents --batch_size 256 --model NFAE --output_path Latents.pth
+accelerate launch --config-file ./accelerate_configs/AE.yml -m scripts.ComputeLatents \
+           --batch_size 256 \
+           --model NFAE \
+           --output_path Latents.pth
 ```
 
 This will save the latents in `Latents.pth`, which we pass to the LDM trainer to use. 
@@ -56,11 +67,53 @@ NOTE: the model you pass must be an hf compatible checkpoint including the model
 Once the latents are obtained we can start training the LDM model. To do this we provide the `trainLDM.py` script which you can run using accelerate as well. For LDM training we use 4 GPUs and a batch size of 32 per gpu (128 effective batch size). To train the   LDM you can run:
 
 ```
-accelerate launch --config-file ./accelerate_configs/LDM.yml -m scripts.trainLDM --batch_size 32 --cosine_scheduler --latents_path Latents.pth --final_checkpoint LDM
+accelerate launch --config-file ./accelerate_configs/LDM.yml -m scripts.trainLDM \
+           --batch_size 32 \
+           --cosine_scheduler \
+           --latents_path Latents.pth \
+           --final_checkpoint LDM
 ```
 
 ### Pre-Trained Checkpoints
 Our checkpoint is availble on HF. This checkpoints are available at the following repos on HF:
 
+Auto Encoder: [OpenTO/NFAE](https://huggingface.co/OpenTO/NFAE)
+Latent Diffusion: [OpenTO/LDM](https://huggingface.co/OpenTO/LDM)
+
+We also have two checkpoints trained on a larger latent space (80x80):
+
+Auto Encoder Large Latent: [OpenTO/NFAE_L](https://huggingface.co/OpenTO/NFAE_L)
+Latent Diffusion Large Latent: [OpenTO/LDM_L](https://huggingface.co/OpenTO/LDM_L)
+
 ## Inference and FEA
 In this code base we also provide the FEA solver and TO Optimizer we use to generate the data. This solver is a fork of the pyEDGE repository which we use here.
+
+### Generating Samples
+To generate sample you can run the `GenerateSolutions.py` script. For example to run generation with 4 samples per problem on the openTO test set on 8 gpus you can run:
+
+```
+accelerate launch --config-file ./accelerate_configs/LDM.yml --num-processes=8 -m scripts.GenerateSolutions \
+            --n_samples 4 \
+            --splits test\
+            --output_path GeneratedSamples.pkl \
+            --guidance_scale 2.0 \
+            --batch_size 64 \
+            --num_sampling_steps 20 \
+            --ddim
+```
+
+You can see the argument list for the script if you run with help.
+
+### Evaluting Against Ground Truth
+To run evaluation on the samples generated you can either simulate samples on CPU of GPU. The scripts associated with each one are `RunComplianceTest.py` and `RunComplianceTestCPU.py` respectively. To run evaluation on the above generated samples on GPU you can run:
+
+```
+python -m scripts.RunComplianceTest \
+       --splits test \
+       --generations_path GeneratedSamples.pkl \
+       --num_workers_per_gpu 8 \
+       --few_steps \
+       --output_path ComplianceResults.pkl
+```
+
+The code will print the final statics we report in the paper. You can run the CPU code with the same arguments except instead of `--num_workers_per_gpu` you would pass `--num_workers`.
