@@ -180,7 +180,10 @@ def main():
                 SIMP10_VFEs.append(np.ones_like(SIMP10_VFEs[0]) * np.inf)
                 
         else:
-            ce, vfe = res
+            if res is None:
+                ce, vfe = None, None
+            else:
+                ce, vfe = res
             
         if ce is not None:
             CEs.append(ce)
