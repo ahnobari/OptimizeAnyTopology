@@ -1,7 +1,7 @@
 # Optimize Any Topology
 This repository is the official implementation of the Optimize Any Topology model for minimum compliance topology optimization.
 
-![image](https://github.com/user-attachments/assets/6200fa2c-0cd5-49af-897c-67688f28c446)
+![image](https://github.com/user-attachments/assets/4327f376-b4a3-448a-8c8f-104ceef9f7da)
 
 
 **NEW: Accepted to Neurips 2025**
