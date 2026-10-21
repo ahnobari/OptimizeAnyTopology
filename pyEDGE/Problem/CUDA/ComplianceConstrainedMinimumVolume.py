@@ -118,7 +118,7 @@ class ComplianceConstrainedMinimumVolume(Problem):
 
         if self.is_single_material:
             if self.heavyside:
-                _rho = (np.tanh(self.beta + self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
+                _rho = (np.tanh(self.beta * self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
             else:
                 _rho = rho
             _rho = _rho**pen
@@ -130,7 +130,7 @@ class ComplianceConstrainedMinimumVolume(Problem):
             
         else:
             if self.heavyside:
-                _rho = (np.tanh(self.beta + self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
+                _rho = (np.tanh(self.beta * self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
             else:
                 _rho = rho
             rho_ = _rho**pen
@@ -161,7 +161,7 @@ class ComplianceConstrainedMinimumVolume(Problem):
             
         if self.is_single_material:
             if self.heavyside:
-                rho_heavy = (np.tanh(self.beta + self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
+                rho_heavy = (np.tanh(self.beta * self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
                 df = pen * rho_heavy ** (pen - 1) * self.beta * (1 - np.tanh(self.beta * (rho-self.eta))**2) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
             else:
                 df = pen * rho ** (pen - 1)
@@ -170,7 +170,7 @@ class ComplianceConstrainedMinimumVolume(Problem):
         
         else:
             if self.heavyside:
-                rho_heavy = (np.tanh(self.beta + self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
+                rho_heavy = (np.tanh(self.beta * self.eta) + np.tanh(self.beta * (rho-self.eta))) / (np.tanh(self.beta*self.eta) + np.tanh(self.beta * (1-self.eta)))
                 
                 rho_ = pen * rho_heavy ** (pen - 1)
                 rho__ = 1 - rho_heavy**pen
